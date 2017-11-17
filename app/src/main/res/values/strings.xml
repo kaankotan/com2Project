@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MorseCodeTranslator</string>
+    <string name="splash_text">Communications II</string>
 </resources>
