@@ -40,8 +40,19 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        /// Custom font Segoe UI.
+        mTypeFace = Typeface.createFromAsset(getAssets(), "fonts/segoeuil.ttf");
+        mTextView = (TextView) findViewById(R.id.splash_text);
+        mTextView.setTypeface(mTypeFace);
+
+        /// External library used for animations.
+        YoYo.with(Techniques.Tada)
+                .duration(1300)
+                .repeat(5)
+                .playOn(findViewById(R.id.splash_text));
+
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if(this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("This project needs location service.");
                 builder.setMessage("Please grant location access, so app can detect Bluetooth Morse device.");
@@ -69,17 +80,25 @@ public class MainActivity extends AppCompatActivity {
                 }, 6000);
             }
         }
+        /* If the device SDK is lower than API 23 or Marshmallow. */
+        else {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("You need to update your phone.");
+            builder.setMessage("Therefore, app was engineered in that way, you can use it also.");
+            builder.setPositiveButton("OK :(", null);
+            builder.show();
 
-        /// Custom font Segoe UI.
-        mTypeFace = Typeface.createFromAsset(getAssets(), "fonts/segoeuil.ttf");
-        mTextView = (TextView) findViewById(R.id.splash_text);
-        mTextView.setTypeface(mTypeFace);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Intent mainIntent = new Intent(MainActivity.this, BluetoothActivity.class);
+                    startActivity(mainIntent);
+                    MainActivity.this.finish();
+                    overridePendingTransition(R.anim.slide_in, R.anim.slide_out);
+                }
+            }, 6000);
+        }
 
-        /// External library used for animations.
-        YoYo.with(Techniques.Tada)
-                .duration(1300)
-                .repeat(5)
-                .playOn(findViewById(R.id.splash_text));
     }
 
     @Override
