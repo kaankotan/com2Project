@@ -13,10 +13,11 @@ import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.yalantis.phoenix.PullToRefreshView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,7 @@ public class BluetoothActivity extends AppCompatActivity {
     private TextView welcomeTextView;
     private ListView listView;
     private Typeface mTypeFace;
+    private PullToRefreshView mPullToRefreshView;
 
     private final List<BluetoothDevice> bluetoothDeviceList = new ArrayList<>();
 
@@ -52,7 +54,6 @@ public class BluetoothActivity extends AppCompatActivity {
                 welcomeTextView.setVisibility(View.VISIBLE);
 
                 BluetoothDevice bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                Log.i("DeviceFound", bluetoothDevice.getName());
                 bluetoothDeviceList.add(bluetoothDevice);
                 adapter = new BluetoothListAdapter(BluetoothActivity.this, bluetoothDeviceList);
                 listView.setAdapter(adapter);
@@ -111,6 +112,24 @@ public class BluetoothActivity extends AppCompatActivity {
             builder.setPositiveButton("GOT IT!", null);
 
             bluetoothAdapter.startDiscovery();
+
+            mPullToRefreshView = (PullToRefreshView) findViewById(R.id.pull_to_refresh);
+            mPullToRefreshView.setOnRefreshListener(new PullToRefreshView.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    mPullToRefreshView.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(bluetoothDeviceList.size() > 0) {
+                                bluetoothDeviceList.removeAll(bluetoothDeviceList);
+                            }
+
+                            bluetoothAdapter.startDiscovery();
+                            mPullToRefreshView.setRefreshing(false);
+                        }
+                    }, 1000);
+                }
+            });
         }
         builder.show();
 
