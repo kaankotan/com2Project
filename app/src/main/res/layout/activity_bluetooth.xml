@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:fancy="http://schemas.android.com/apk/res-auto"
     tools:context="org.kaan.morsecodetranslator.BluetoothActivity">
 
     <TextView
@@ -31,5 +32,36 @@
             android:layout_marginTop="13dp" />
 
     </com.yalantis.phoenix.PullToRefreshView>
+
+    <mehdi.sakout.fancybuttons.FancyButton
+        android:id="@+id/connect_button"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="10dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="10dp"
+        fancy:fb_borderColor="#FFFFFF"
+        fancy:fb_borderWidth="1dp"
+        fancy:fb_defaultColor="#7ab800"
+        fancy:fb_focusColor="#9bd823"
+        fancy:fb_radius="30dp"
+        fancy:fb_text="Connect Module"
+        fancy:fb_textColor="#FFFFFF" />
+
+    <com.wang.avi.AVLoadingIndicatorView
+        android:id="@+id/avi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        style="@style/AVLoadingIndicatorView"
+        android:visibility="visible"
+        fancy:indicatorName="BallPulseIndicator"
+        fancy:indicatorColor="#744BAC"
+    />
 
 </RelativeLayout>

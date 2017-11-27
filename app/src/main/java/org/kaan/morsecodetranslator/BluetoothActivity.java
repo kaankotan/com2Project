@@ -3,6 +3,7 @@ package org.kaan.morsecodetranslator;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,14 +14,18 @@ import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.wang.avi.AVLoadingIndicatorView;
 import com.yalantis.phoenix.PullToRefreshView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import mehdi.sakout.fancybuttons.FancyButton;
 
 /* On Android, it is general to use "m" for private class member. Short for -> member */
 public class BluetoothActivity extends AppCompatActivity {
@@ -31,6 +36,12 @@ public class BluetoothActivity extends AppCompatActivity {
     private ListView listView;
     private Typeface mTypeFace;
     private PullToRefreshView mPullToRefreshView;
+    private FancyButton mConnectButton;
+    private AVLoadingIndicatorView avi;
+    private BluetoothDevice hcArduino;
+    private BluetoothSocket bluetoothSocket = null;
+
+    private static final String MAC_ADDRESS_HC = "20:16:04:05:27:69";
 
     private final List<BluetoothDevice> bluetoothDeviceList = new ArrayList<>();
 
@@ -54,6 +65,7 @@ public class BluetoothActivity extends AppCompatActivity {
                 welcomeTextView.setVisibility(View.VISIBLE);
 
                 BluetoothDevice bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
                 bluetoothDeviceList.add(bluetoothDevice);
                 adapter = new BluetoothListAdapter(BluetoothActivity.this, bluetoothDeviceList);
                 listView.setAdapter(adapter);
@@ -69,10 +81,17 @@ public class BluetoothActivity extends AppCompatActivity {
 
         listView = (ListView) findViewById(R.id.listView);
 
+        mConnectButton = (FancyButton) findViewById(R.id.connect_button);
+
+        avi = (AVLoadingIndicatorView) findViewById(R.id.avi);
+        avi.setVisibility(View.INVISIBLE);
+
         mTypeFace = Typeface.createFromAsset(getAssets(), "fonts/segoeuil.ttf");
         welcomeTextView = (TextView) findViewById(R.id.textView);
         welcomeTextView.setTypeface(mTypeFace);
         welcomeTextView.setVisibility(View.INVISIBLE);
+
+        mConnectButton.setCustomTextFont("fonts/segoeuil.ttf");
 
         intentFilter = new IntentFilter();
         intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
@@ -128,6 +147,25 @@ public class BluetoothActivity extends AppCompatActivity {
                             mPullToRefreshView.setRefreshing(false);
                         }
                     }, 1000);
+                }
+            });
+
+            mConnectButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.i("ConnectButton", "Clicked.");
+                    avi.setVisibility(View.VISIBLE);
+
+                    hcArduino = bluetoothAdapter.getRemoteDevice(MAC_ADDRESS_HC);
+
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Thread connectionThread = new ServerConnection(hcArduino, bluetoothAdapter);
+                            connectionThread.run();
+                        }
+                    }).start();
+
                 }
             });
         }
