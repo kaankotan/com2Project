@@ -1,22 +1,29 @@
 package org.kaan.morsecodetranslator;
 
 import android.annotation.SuppressLint;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Typeface;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.wang.avi.AVLoadingIndicatorView;
@@ -32,16 +39,67 @@ public class BluetoothActivity extends AppCompatActivity {
 
     private BluetoothAdapter bluetoothAdapter;
     private IntentFilter intentFilter;
-    private TextView welcomeTextView;
+    private TextView welcomeTextView, morseTopText;
     private ListView listView;
     private Typeface mTypeFace;
     private PullToRefreshView mPullToRefreshView;
     private FancyButton mConnectButton;
     private AVLoadingIndicatorView avi;
     private BluetoothDevice hcArduino;
-    private BluetoothSocket bluetoothSocket = null;
+    private NotificationManager notificationManager;
+    private NotificationCompat.Builder mBuilder;
+    private View secondView;
+    private SeekBar seekBar;
+    private TextView thresholdText;
+    private TextView morseDisplayText;
+    private static String receivedButtonTime = "";
+    private static String displayText = "";
+    private static String morseHash = "";
+
+    private static int progressValue = 50;
+    private static int threshold = 2000;
 
     private static final String MAC_ADDRESS_HC = "20:16:04:05:27:69";
+
+    @SuppressLint("HandlerLeak")
+    private final Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            byte[] readBuffer = (byte[]) msg.obj;
+            String chunk = new String(readBuffer, 0, msg.arg1);
+            if(chunk.contains(".")) {
+                receivedButtonTime += chunk.substring(0, chunk.indexOf('.') - 1);
+                morseTopText.setText(receivedButtonTime + " ms");
+                if(Integer.parseInt(receivedButtonTime.trim()) > threshold) {
+                    morseHash += "l";
+                }
+                else {
+                    morseHash += "s";
+                }
+
+                receivedButtonTime = "";
+            }
+            else {
+                if(chunk.contains(",")) {
+                    morseTopText.setText("Space received.");
+
+                    if(MorseHashTable.morseDictionary.get(morseHash) != null) {
+                        displayText += MorseHashTable.morseDictionary.get(morseHash);
+                        displayText += " ";
+                        morseDisplayText.setText(displayText);
+                        morseHash = "";
+                    }
+                    else {
+                        displayText += " ";
+                    }
+                }
+                else {
+                    receivedButtonTime += chunk;
+                }
+            }
+
+        }
+    };
 
     private final List<BluetoothDevice> bluetoothDeviceList = new ArrayList<>();
 
@@ -78,8 +136,15 @@ public class BluetoothActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bluetooth);
+        MorseHashTable.createHashTable();
 
         listView = (ListView) findViewById(R.id.listView);
+
+        LayoutInflater layoutInflater = getLayoutInflater();
+        secondView = layoutInflater.inflate(R.layout.morse_layout, null, false);
+        secondView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out));
+
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         mConnectButton = (FancyButton) findViewById(R.id.connect_button);
 
@@ -92,6 +157,15 @@ public class BluetoothActivity extends AppCompatActivity {
         welcomeTextView.setVisibility(View.INVISIBLE);
 
         mConnectButton.setCustomTextFont("fonts/segoeuil.ttf");
+
+        Intent intent = new Intent(this, BluetoothActivity.class);
+        mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.sun)
+                        .setContentTitle("Data received!")
+                        .setContentText("Bluetooth module just sent a data!");
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        mBuilder.setContentIntent(pendingIntent);
 
         intentFilter = new IntentFilter();
         intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
@@ -158,14 +232,44 @@ public class BluetoothActivity extends AppCompatActivity {
 
                     hcArduino = bluetoothAdapter.getRemoteDevice(MAC_ADDRESS_HC);
 
+                    setContentView(secondView);
+
+                    seekBar = (SeekBar) findViewById(R.id.progressBar);
+                    thresholdText = (TextView) findViewById(R.id.thresholdText);
+                    morseDisplayText = (TextView) findViewById(R.id.mainMorseText);
+                    morseDisplayText.setTypeface(mTypeFace);
+                    thresholdText.setTypeface(mTypeFace);
+
+                    seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            progressValue = progress;
+                            threshold = (progress * 40);
+                            thresholdText.setText("Threshold: " + threshold + " ms");
+                        }
+
+                        @Override
+                        public void onStartTrackingTouch(SeekBar seekBar) {
+
+                        }
+
+                        @Override
+                        public void onStopTrackingTouch(SeekBar seekBar) {
+
+                        }
+                    });
+
+                    morseTopText = (TextView) findViewById(R.id.morseTopText);
+                    morseTopText.setTypeface(mTypeFace);
+
                     new Thread(new Runnable() {
+                        @SuppressLint("HandlerLeak")
                         @Override
                         public void run() {
-                            Thread connectionThread = new ServerConnection(hcArduino, bluetoothAdapter);
+                            Thread connectionThread = new ServerConnection(hcArduino, bluetoothAdapter, notificationManager, mBuilder, mHandler);
                             connectionThread.run();
                         }
                     }).start();
-
                 }
             });
         }
