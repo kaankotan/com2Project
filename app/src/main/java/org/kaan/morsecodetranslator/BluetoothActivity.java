@@ -68,8 +68,9 @@ public class BluetoothActivity extends AppCompatActivity {
             byte[] readBuffer = (byte[]) msg.obj;
             String chunk = new String(readBuffer, 0, msg.arg1);
             if(chunk.contains(".")) {
-                receivedButtonTime += chunk.substring(0, chunk.indexOf('.') - 1);
-                morseTopText.setText(receivedButtonTime + " ms");
+                receivedButtonTime += chunk.substring(0, chunk.indexOf('.'));
+                receivedButtonTime = receivedButtonTime.replace(System.getProperty("line.separator"), "");
+                morseTopText.setText(receivedButtonTime);
                 if(Integer.parseInt(receivedButtonTime.trim()) > threshold) {
                     morseHash += "l";
                 }
