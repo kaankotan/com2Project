@@ -14,6 +14,7 @@ import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -240,6 +241,16 @@ public class BluetoothActivity extends AppCompatActivity {
                     morseDisplayText = (TextView) findViewById(R.id.mainMorseText);
                     morseDisplayText.setTypeface(mTypeFace);
                     thresholdText.setTypeface(mTypeFace);
+
+                    final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+                    fab.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            MorseLayoutFragment fragment = MorseLayoutFragment.newInstance();
+                            fragment.setParentFab(fab);
+                            fragment.show(getSupportFragmentManager(), fragment.getTag());
+                        }
+                    });
 
                     seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                         @Override
