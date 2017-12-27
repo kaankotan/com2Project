@@ -242,6 +242,15 @@ public class BluetoothActivity extends AppCompatActivity {
                     morseDisplayText.setTypeface(mTypeFace);
                     thresholdText.setTypeface(mTypeFace);
 
+                    final FloatingActionButton deleteFab = (FloatingActionButton) findViewById(R.id.deleteFab);
+                    deleteFab.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            displayText = "";
+                            morseDisplayText.setText("");
+                        }
+                    });
+
                     final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
                     fab.setOnClickListener(new View.OnClickListener() {
                         @Override

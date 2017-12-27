@@ -26,7 +26,21 @@
         android:layout_marginRight="8sp"
         android:layout_alignParentBottom="true"
         android:src="@drawable/sun"
-        android:layout_alignParentRight="true" />
+        android:layout_alignParentRight="true"
+        tools:ignore="RelativeOverlap" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/deleteFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="35sp"
+        android:clickable="true"
+        android:backgroundTint="@android:color/holo_red_light"
+        android:layout_marginLeft="8sp"
+        android:src="@drawable/bluetooth_icon"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        />
 
     <SeekBar
         android:id="@+id/progressBar"
